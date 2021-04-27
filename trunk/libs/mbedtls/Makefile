@@ -1,8 +1,8 @@
-SRC_NAME=mbedtls-2.7.4
-SRC_URL=https://tls.mbed.org/download/mbedtls-2.7.4-apache.tgz
+SRC_NAME=mbedtls-2.7.12
+SRC_URL=https://tls.mbed.org/download/mbedtls-2.7.12-gpl.tgz
 
 all: download_test extract_test config_test
-	$(MAKE) -C $(SRC_NAME)/build
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/build
 
 download_test:
 	( if [ ! -f $(SRC_NAME).tgz ]; then \
@@ -11,7 +11,7 @@ download_test:
 
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tgz; \
+		tar -xf $(SRC_NAME).tgz; \
 	fi )
 
 config_test:
@@ -30,6 +30,8 @@ configure:
 	-DUSE_STATIC_MBEDTLS_LIBRARY=Off \
 	-DENABLE_TESTING=Off \
 	-DENABLE_PROGRAMS=Off \
+	-DLINK_WITH_PTHREAD=On \
+	-DENABLE_ZLIB_SUPPORT=On \
 	.. \
 	)
 

@@ -2,7 +2,7 @@ SRC_NAME=dosfstools-4.1
 SRC_URL=https://github.com/dosfstools/dosfstools/releases/download/v4.1/dosfstools-4.1.tar.xz
 
 all: download_test extract_test config_test
-	$(MAKE) -C $(SRC_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 
 download_test:
 	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
@@ -12,6 +12,7 @@ download_test:
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
 		tar xJf $(SRC_NAME).tar.xz; \
+		patch -p1 -d $(SRC_NAME) < $(SRC_NAME).patch ; \
 	fi )
 
 config_test:
@@ -37,10 +38,10 @@ clean:
 		$(MAKE) -C $(SRC_NAME) distclean; \
 	fi ; \
 	rm -f config_done
-	rm -f dosfsck
+	rm -f fsck.fat
 
 romfs:
-	cp $(SRC_NAME)/src/fsck.fat dosfsck
-	$(STRIP) dosfsck
-	$(ROMFSINST) /sbin/dosfsck
+	cp $(SRC_NAME)/src/fsck.fat .
+	$(STRIP) fsck.fat
+	$(ROMFSINST) /sbin/fsck.fat
 

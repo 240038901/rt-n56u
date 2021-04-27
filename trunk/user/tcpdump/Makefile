@@ -27,13 +27,15 @@ config_test:
 configure:
 	( cd $(SRC_NAME) ; \
 	ac_cv_linux_vers=3 \
+	ac_cv_header_rpc_rpcent_h=no \
 	ac_cv_lib_rpc_main=no \
-	ac_cv_path_PCAP_CONFIG="" \
+	ac_cv_path_PCAP_CONFIG="$(STAGEDIR)/bin/pcap-config" \
 	td_cv_buggygetaddrinfo=no \
 	./configure \
 		--prefix=/usr \
 		--without-crypto \
 		--without-smi \
+		--without-cap-ng \
 		--disable-smb \
 		$(if $(CONFIG_IPV6),--enable-ipv6,--disable-ipv6) \
 		--host=$(HOST_TARGET) \
@@ -41,7 +43,7 @@ configure:
 	)
 
 build:
-	$(MAKE) -C $(SRC_NAME) TCPDUMP_MINI=1
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME) TCPDUMP_MINI=1
 
 clean:
 	rm -f config_done

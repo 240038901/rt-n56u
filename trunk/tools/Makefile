@@ -10,33 +10,27 @@ OBJCOPY   = objcopy
 RANLIB    = ranlib
 STRIP     = strip
 STRIPTOOL = $(STRIP)
+SSTRIP_NAME = ELFkickers-3.1
 
 CFLAGS    = -Wall -O2
 LDFLAGS   =
 
 -include $(LINUX_CONFIG)
 
-all : install
-
-install :
-	mkdir -p bin
+all:
 	make -C mkimage
-	make -C sstrip
-	make -C mksquash_lzma-3.2 install
+	mkdir -p sstrip
+	make -C $(SSTRIP_NAME)
+	make -C lzma
 ifeq ($(CONFIG_RT2880_ROOTFS_IN_FLASH),y)
-	make -C mksquash_xz-4.0 install
+	make -C mksquashfs_xz
 endif
 
 clean:
-	rm -rf ./bin
-	rm -rf ./headers
-	make -C sstrip clean
-	make -C mkimage clean
-	make -C mksquash_lzma-3.2 clean
-	make -C mksquash_xz-4.0 clean
-	if [ -f xz/Makefile ] ; then \
-		make -C xz distclean ; \
+	if [ -f $(SSTRIP_NAME)/Makefile ] ; then \
+		make -C $(SSTRIP_NAME) clean ; \
 	fi ;
-
-mrproper:
-	echo "OK"
+	rm -rf sstrip
+	make -C mkimage clean
+	make -C lzma clean
+	make -C mksquashfs_xz clean

@@ -235,6 +235,10 @@ function show_banner(L3){
 		style_2g = 'width:114px;';
 		style_5g = 'width:21px;display:none;';
 	}
+	var title_2g = '"2.4G"'
+	if (!support_2g_radio()) {
+		title_2g = '"N/A" disabled';
+	}
 
 	// log panel
 	if (!is_mobile && log_float != '0'){
@@ -243,6 +247,7 @@ function show_banner(L3){
 		bc += '<table class="" style="margin-top: 0px; margin-bottom: 5px" width="100%" border="0">\n';
 		bc += '  <tr>\n';
 		bc += '    <td width="60%" style="text-align: left"><b><#General_x_SystemTime_itemname#>:</b><span class="alert alert-info" style="margin-left: 10px; padding-top: 4px; padding-bottom: 4px;" id="system_time_log_area"></span></td>\n';
+		bc += '    <td style="text-align: lift"><input type="hidden" id="scrATop" value=""></td>\n';
 		bc += '    <td style="text-align: right"><button type="button" id="clearlog_btn" class="btn btn-info" style="min-width: 170px;" onclick="clearlog();"><#CTL_clear#></button></td>\n';
 		bc += '  </tr>\n';
 		bc += '</table>\n';
@@ -342,11 +347,11 @@ function show_banner(L3){
 	bc += '<table class="table table-condensed" style="margin-bottom: 0px">\n';
 	bc += '  <tr>\n';
 	bc += '    <td width="50%" style="border: 0 none;"><#menu5_1#>:</td>\n';
-	bc += '    <td style="border: 0 none; min-width: 115px;"><div class="form-inline"><input type="button" id="wifi2_b" class="btn btn-mini '+enabled2Gclass+'" style="'+style_2g+'" value="2.4GHz" onclick="go_setting(2);">&nbsp;<input type="button" id="wifi5_b" style="'+style_5g+'" class="btn btn-mini '+enabled5Gclass+'" value="5GHz" onclick="go_setting(5);"></div></td>\n';
+	bc += '    <td style="border: 0 none; min-width: 115px;"><div class="form-inline"><input type="button" id="wifi2_b" class="btn btn-mini '+enabled2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_setting(2);">&nbsp;<input type="button" id="wifi5_b" style="'+style_5g+'" class="btn btn-mini '+enabled5Gclass+'" value="5G" onclick="go_setting(5);"></div></td>\n';
 	bc += '  </tr>\n';
 	bc += '  <tr>\n';
 	bc += '    <td><#menu5_1_2#>:</td>\n';
-	bc += '    <td><div class="form-inline"><input type="button" id="wifi2_b_g" class="btn btn-mini '+enabledGuest2Gclass+'" style="'+style_2g+'" value="2.4GHz" onclick="go_wguest(2);">&nbsp;<input type="button" id="wifi5_b_g" style="'+style_5g+'" class="btn btn-mini '+enabledGuest5Gclass+'" value="5GHz" onclick="go_wguest(5);"></div></td>\n';
+	bc += '    <td><div class="form-inline"><input type="button" id="wifi2_b_g" class="btn btn-mini '+enabledGuest2Gclass+'" style="'+style_2g+'" value='+title_2g+' onclick="go_wguest(2);">&nbsp;<input type="button" id="wifi5_b_g" style="'+style_5g+'" class="btn btn-mini '+enabledGuest5Gclass+'" value="5G" onclick="go_wguest(5);"></div></td>\n';
 	bc += '  </tr>\n';
 	bc += '  <tr>\n';
 	bc += '    <td><#General_x_FirmwareVersion_itemname#></td>\n';
@@ -354,7 +359,7 @@ function show_banner(L3){
 	bc += '  </tr>\n';
 	bc += '  <tr>\n';
 	bc += '    <td><button type="button" id="commit_btn" class="btn btn-mini" style="width: 114px; height: 21px; outline:0; '+enabledBtnCommit+'" onclick="commit();"><i class="icon icon-fire"></i>&nbsp;<#CTL_Commit#></button></td>\n';
-	bc += '    <td><button type="button" id="logout_btn" class="btn btn-mini" style="width: 114px; height: 21px; outline:0;" onclick="logout();"><#t1Logout#></button> <button type="button" id="reboto_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_REBOOT#>" onclick="reboot();"><i class="icon icon-off"></i></button></td>\n';
+	bc += '    <td><button type="button" id="logout_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#t1Logout#>" onclick="logout();"><i class="icon icon-user"></i></button> <button type="button" id="reboto_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_REBOOT#>" onclick="reboot();"><i class="icon icon-repeat"></i></button> <button type="button" id="shutdown_btn" class="btn btn-mini" style="height: 21px; outline:0;" title="<#BTN_SHUTDOWN#>" onclick="shutdown();"><i class="icon icon-off"></i></button></td>\n';
 	bc += '  </tr>\n';
 	bc += '</table>\n';
 	bc += '</div>\n';
@@ -376,7 +381,7 @@ var tabtitle = new Array(15);
 var tablink = new Array(15);
 tabtitle[0] = new Array("", "<#menu5_1_1#>", "<#menu5_1_2#>", "<#menu5_1_3#>", "<#menu5_1_4#>", "<#menu5_1_5#>", "<#menu5_1_6#>");
 tabtitle[1] = new Array("", "<#menu5_1_1#>", "<#menu5_1_2#>", "<#menu5_1_3#>", "<#menu5_1_4#>", "<#menu5_1_5#>", "<#menu5_1_6#>");
-tabtitle[2] = new Array("", "<#menu5_2_1#>", "<#menu5_2_2#>", "<#menu5_2_3#>", "<#menu5_2_4#>", "<#menu5_2_5#>", "Wake-on-LAN");
+tabtitle[2] = new Array("", "<#menu5_2_1#>", "<#menu5_2_2#>", "<#menu5_2_3#>", "<#menu5_2_4#>", "<#menu5_2_5#>", "<#menu5_2_6#>");
 tabtitle[3] = new Array("", "<#menu5_3_1#>", "<#menu5_3_3#>", "<#menu5_3_4#>", "<#menu5_3_5#>", "<#menu5_3_6#>");
 tabtitle[4] = new Array("", "<#menu5_5_1#>", "<#menu5_5_5#>", "<#menu5_5_2#>", "<#menu5_5_3#>", "<#menu5_5_4#>");
 tabtitle[5] = new Array("", "<#menu5_4_3#>", "<#menu5_4_1#>", "<#menu5_4_2#>", "<#menu5_4_4#>", "<#menu5_4_5#>");
@@ -387,14 +392,14 @@ tabtitle[9] = new Array("", "<#menu5_7_2#>", "<#menu5_7_3#>", "<#menu5_7_5#>", "
 if (found_app_scutclient()){
 	tabtitle[10] = new Array("", "<#menu5_1_1#>","<#menu5_13_log#>");
 }
-if (found_app_chinadns()){
+if (found_app_dnsforwarder()){
 	tabtitle[11] = new Array("", "<#menu5_1_1#>");
 }
-if (found_app_dnsforwarder()){
-	tabtitle[12] = new Array("", "<#menu5_1_1#>");
-}
 if (found_app_shadowsocks()){
-	tabtitle[13] = new Array("", "<#menu5_1_1#>","<#menu5_16_20#>");
+	tabtitle[12] = new Array("", "<#menu5_1_1#>","<#menu5_16_20#>");
+}
+if (found_app_mentohust()){
+	tabtitle[13] = new Array("", "<#menu5_1_1#>","<#menu5_13_log#>");
 }
 
 //Level 3 Tab title
@@ -413,17 +418,17 @@ if (found_app_scutclient()){
 	scutclient_array = new Array("", "scutclient.asp", "scutclient_log.asp");
 	tablink[10] = (scutclient_array);
 }
-if (found_app_chinadns()){
-	chinadns_array = new Array("", "Chinadns.asp");
-	tablink[11] = (chinadns_array);
-}
 if (found_app_dnsforwarder()){
 	dns_forwarder_array = new Array("", "dns-forwarder.asp");
-	tablink[12] = (dns_forwarder_array);
+	tablink[11] = (dns_forwarder_array);
 }
 if (found_app_shadowsocks()){
 	shadowsocks_array = new Array("","Shadowsocks.asp","Shadowsocks_log.asp");
-	tablink[13] = (shadowsocks_array);
+	tablink[12] = (shadowsocks_array);
+}
+if (found_app_mentohust()){
+	mentohust_array = new Array("","mentohust.asp","mentohust_log.asp");
+	tablink[13] = (mentohust_array);
 }
 
 //Level 2 Menu
@@ -431,10 +436,6 @@ menuL2_title = new Array(15)
 menuL2_title = new Array("", "<#menu5_11#>", "<#menu5_12#>", "<#menu5_2#>", "<#menu5_3#>", "<#menu5_5#>", "<#menu5_4#>", "<#menu5_6#>", "<#menu5_10#>", "<#menu5_9#>", "<#menu5_7#>");
 if (found_app_scutclient()){
 	menuL2_title.push("<#menu5_13#>");
-} else menuL2_title.push("");
-
-if (found_app_chinadns()){
-	menuL2_title.push("<#menu5_14#>");
 } else menuL2_title.push("");
 
 if (found_app_dnsforwarder()){
@@ -445,14 +446,14 @@ if (found_app_shadowsocks()){
 	menuL2_title.push("<#menu5_16#>");
 } else menuL2_title.push("");
 
+if (found_app_mentohust()){
+	menuL2_title.push("mentohust");
+} else menuL2_title.push("");
 
-menuL2_link  = new Array("", tablink[0][1], tablink[1][1], tablink[2][1], tablink[3][1], tablink[4][1], tablink[5][1], tablink[6][1], tablink[7][1], tablink[8][1], tablink[9][1]);
+
+menuL2_link  = new Array("", tablink[0][1], tablink[1][1], tablink[2][1], tablink[3][1], tablink[4][1], tablink[5][1], tablink[6][1], tablink[7][1], support_2g_radio() ? tablink[8][1] : "Main_EStatus_Content.asp", tablink[9][1]);
 if (found_app_scutclient()){
 	menuL2_link.push(scutclient_array[1]);
-} else menuL2_link.push("");
-
-if (found_app_chinadns()){
-	menuL2_link.push(chinadns_array[1]);
 } else menuL2_link.push("");
 
 if (found_app_dnsforwarder()){
@@ -463,9 +464,13 @@ if (found_app_shadowsocks()){
 	menuL2_link.push(shadowsocks_array[1]);
 } else menuL2_link.push("");
 
+if (found_app_mentohust()){
+	menuL2_link.push(mentohust_array[1]);
+} else menuL2_link.push("");
+
 //Level 1 Menu in Gateway, Router mode
-menuL1_title = new Array("", "<#menu1#>", "<#menu3#>", "<#menu2#>", "<#menu6#>", "<#menu4#>", "<#menu5_8#>", "<#menu5#>");
-menuL1_link = new Array("", "index.asp", "aidisk.asp", "vpnsrv.asp", "vpncli.asp", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");
+menuL1_title = new Array("", "<#menu1#>", "", "", "", "<#menu4#>", "<#menu5_8#>", "<#menu5#>");
+menuL1_link = new Array("", "index.asp", "", "", "", "Main_TrafficMonitor_realtime.asp", "Advanced_System_Info.asp", "as.asp");
 menuL1_icon = new Array("", "icon-home", "icon-hdd", "icon-retweet", "icon-globe", "icon-tasks", "icon-random", "icon-wrench");
 
 function show_menu(L1, L2, L3){
@@ -492,12 +497,6 @@ function show_menu(L1, L2, L3){
 		menuL2_title[4] = "";
 		menuL2_link[5] = "";  //remove Firewall
 		menuL2_title[5] = "";
-		menuL1_link[2] = "";  //remove AiDisk;
-		menuL1_title[2] = "";
-		menuL1_link[3] = "";  //remove VPN svr
-		menuL1_title[3] = "";
-		menuL1_link[4] = "";  //remove VPN cli
-		menuL1_title[4] = "";
 		
 		if (lan_proto == '1'){
 			tabtitle[2].splice(2,1);
@@ -525,20 +524,28 @@ function show_menu(L1, L2, L3){
 		tablink[8].splice(3+num_ephy,8-num_ephy);
 	}
 
+	if(!support_2g_radio()){
+		menuL2_link[1] = "";  //remove 2G
+		menuL2_title[1] = "";
+		tabtitle[0].splice(1,6);
+		tablink[0].splice(1,6);
+		tabtitle[8].splice(1,1);
+		tablink[8].splice(1,1);
+	}
+
 	if(!support_5g_radio()){
 		menuL2_link[2] = "";  //remove 5GHz
 		menuL2_title[2] = "";
 		tabtitle[1].splice(1,6);
 		tablink[1].splice(1,6);
-		tabtitle[8].splice(2,1);
-		tablink[8].splice(2,1);
+		var idx = support_2g_radio() ? 2 : 1;
+		tabtitle[8].splice(idx,1);
+		tablink[8].splice(idx,1);
 	}
 
 	if(!support_storage()){
 		tabtitle[5].splice(1,5);
 		tablink[5].splice(1,5);
-		menuL1_link[2] = "";  //remove AiDisk
-		menuL1_title[2] = "";
 		menuL2_link[6] = "";  //remove USB
 		menuL2_title[6] = "";
 	}else{
@@ -549,8 +556,6 @@ function show_menu(L1, L2, L3){
 		if(!found_app_smbd() && !found_app_ftpd()){
 			tabtitle[5].splice(2,2);
 			tablink[5].splice(2,2);
-			menuL1_link[2] = "";
-			menuL1_title[2] = "";
 		}
 		else if(!found_app_smbd()){
 			tabtitle[5].splice(2,1);
@@ -559,8 +564,6 @@ function show_menu(L1, L2, L3){
 		else if(!found_app_ftpd()){
 			tabtitle[5].splice(3,1);
 			tablink[5].splice(3,1);
-			menuL1_link[2] = "";
-			menuL1_title[2] = "";
 		}
 	}
 
@@ -723,6 +726,17 @@ function reboot(){
 	$j.post('/apply.cgi',
 	{
 		'action_mode': ' Reboot ',
+	});
+}
+
+function shutdown(){
+	if(!confirm('<#JS_shutdown#>'))
+		return;
+	var $j = jQuery.noConflict();
+	$j.post('/apply.cgi',
+	{
+		'action_mode': ' Shutdown ',
+		'current_page': 'Main_LogStatus_Content.asp'
 	});
 }
 
@@ -1211,10 +1225,18 @@ function setLogData(){
         if($j("#log_area").val() == ''){
             $j("#log_area").text(data);
             $j("#log_area").prop('scrollTop', $j("#log_area").prop('scrollHeight'));
+            $j("#scrATop").val($j("#log_area").prop('scrollTop'));
         }else{
+            var scrMaxTop = $j("#log_area").prop('scrollHeight')
             var scrTop = $j("#log_area").prop('scrollTop');
             $j("#log_area").text(data);
-            $j("#log_area").prop('scrollTop', scrTop);
+            var scrITop = scrMaxTop - scrTop;
+            if($j("#scrATop").val() == scrTop || scrITop < 629){
+                $j("#log_area").prop('scrollTop', scrMaxTop);
+                $j("#scrATop").val($j("#log_area").prop('scrollTop'));
+            }else{
+                $j("#log_area").prop('scrollTop', scrTop);
+            }
         }
     });
 }

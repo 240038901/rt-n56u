@@ -4326,7 +4326,7 @@ INT RTMPAPQueryInformation(
     INT	Status = NDIS_STATUS_SUCCESS, i;
     POS_COOKIE pObj = (POS_COOKIE) pAd->OS_Cookie;
     STRING	driverVersion[16];
-	struct wifi_dev *wdev;
+	struct wifi_dev *wdev __maybe_unused;
 #if defined(DBG) || defined(WSC_AP_SUPPORT) || defined(BB_SOC) || defined(LLTD_SUPPORT)
 	UCHAR	apidx = pObj->ioctl_if;
 #endif
@@ -15700,7 +15700,6 @@ INT Set_Enable_Channel_Timer_Proc(RTMP_ADAPTER *pAd, PSTRING arg)
 	UCHAR timer_enable;
 	UCHAR bbp_val;
 	UINT32 mac_val;
-	mac_val &= (~0x01);
 
 	DBGPRINT(RT_DEBUG_OFF, ("--> %s()\n", __FUNCTION__));
 	

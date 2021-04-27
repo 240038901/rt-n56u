@@ -1,10 +1,12 @@
-SRC_NAME=ttyd-1.4.0
-SRC_URL=https://github.com/tsl0922/ttyd/archive/1.4.0.tar.gz
+SRC_NAME=ttyd-1.6.2
+SRC_URL=https://github.com/tsl0922/ttyd/archive/1.6.2.tar.gz
 
 THISDIR = $(shell pwd)
 
+CFLAGS += -fno-unwind-tables -fno-asynchronous-unwind-tables
+
 all: download_test extract_test config_test
-	$(MAKE) -C $(SRC_NAME)/build
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)/build
 
 download_test:
 	( if [ ! -f $(THISDIR)/$(SRC_NAME).tar.gz ]; then \
@@ -25,7 +27,7 @@ config_test:
 
 configure:
 	( mkdir -p $(SRC_NAME)/build && cd $(SRC_NAME)/build ; \
-	cmake -DCMAKE_TOOLCHAIN_FILE=../../cross-mipsel-linux.cmake .. \
+	cmake -DCMAKE_TOOLCHAIN_FILE=../../cross-mipsel-linux.cmake -DCMAKE_BUILD_TYPE=RELEASE .. \
 	)
 
 clean:

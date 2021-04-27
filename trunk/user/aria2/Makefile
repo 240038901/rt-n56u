@@ -1,45 +1,44 @@
-SRC_NAME=aria2-1.17.1
-BIN_DIR_NAME=aria2-1.33.1
+SRC_NAME=aria2-1.35.0
+SRC_URL=https://github.com/aria2/aria2/releases/download/release-1.35.0/aria2-1.35.0.tar.xz
 
-SRC_ARIA_NG_NAME=AriaNg-0.5.0
-SRC_ARIA_NG_URL=https://github.com/mayswind/AriaNg/releases/download/0.5.0/AriaNg-0.5.0.zip
+SRC_ARIA_NG_NAME=AriaNg-1.1.7-AllInOne
+SRC_ARIA_NG_URL=https://github.com/mayswind/AriaNg/releases/download/1.1.7/AriaNg-1.1.7-AllInOne.zip
 
 CFLAGS  += -ffunction-sections -fdata-sections
 CXXFLAGS += -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,--gc-sections
+LDFLAGS += -Wl,--gc-sections -static-libstdc++
 
 THISDIR = $(shell pwd)
 
-all: extract_test config_test
-ifeq ($(CONFIG_FIRMWARE_INCLUDE_ARIA2_NEW_PREBUILD_BIN),y)
-	@echo $(BIN_DIR_NAME) done
-else
-	$(MAKE) -C $(SRC_NAME)
-endif
+all: download_test extract_test config_test
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL),y)
 	( if [ ! -f $(THISDIR)/$(SRC_ARIA_NG_NAME).zip ]; then \
 		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_ARIA_NG_NAME).zip $(SRC_ARIA_NG_URL); \
 	fi )
 	( if [ ! -d $(THISDIR)/ariaweb ]; then \
+		mkdir -p ariaweb; \
 		unzip -qq $(SRC_ARIA_NG_NAME).zip -d ariaweb; \
 	fi )
 endif
 
-extract_test:
-ifneq ($(CONFIG_FIRMWARE_INCLUDE_ARIA2_NEW_PREBUILD_BIN),y)
-	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tar.gz; \
+download_test:
+	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.xz $(SRC_URL); \
 	fi )
-endif
+
+extract_test:
+	( if [ ! -d $(SRC_NAME) ]; then \
+		tar xf $(SRC_NAME).tar.xz; \
+		patch -d $(SRC_NAME) -p1 -i ../disable-doc-test.patch; \
+	fi )
 
 config_test:
-ifneq ($(CONFIG_FIRMWARE_INCLUDE_ARIA2_NEW_PREBUILD_BIN),y)
 	( if [ -f ./config_done ]; then \
 		echo "the same configuration"; \
 	else \
 		make configure && touch config_done; \
 	fi )
-endif
 
 configure:
 	( cd $(SRC_NAME) ; \
@@ -57,8 +56,8 @@ configure:
 		--with-libz \
 		--with-openssl \
 		--with-libxml2 \
-		--with-xml-prefix=$(STAGEDIR) \
 		--with-libiconv-prefix=$(STAGEDIR) \
+		PKG_CONFIG_LIBDIR="$(STAGEDIR)/lib/pkgconfig" \
 		ZLIB_CFLAGS="-I$(STAGEDIR)/include" \
 		ZLIB_LIBS="-L$(STAGEDIR)/lib -lz" \
 		OPENSSL_CFLAGS="-I$(STAGEDIR)/include" \
@@ -73,15 +72,11 @@ clean:
 	fi ; \
 	rm -rf ariaweb
 	rm -f config_done
-	rm -rf install
 
 romfs:
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL),y)
 	cp -rf $(THISDIR)/ariaweb $(INSTALLDIR)/www
 endif
-ifeq ($(CONFIG_FIRMWARE_INCLUDE_ARIA2_NEW_PREBUILD_BIN),y)
-	$(ROMFSINST) $(THISDIR)/aria2-bin/$(BIN_DIR_NAME)/aria2c /usr/bin/aria2c
-else
 	$(ROMFSINST) $(THISDIR)/$(SRC_NAME)/src/aria2c /usr/bin/aria2c
-endif
 	$(ROMFSINST) -p +x /usr/bin/aria.sh
+

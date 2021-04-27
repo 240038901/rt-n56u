@@ -292,6 +292,7 @@
 			{"wan_auth_pass", "", NULL, EVM_RESTART_WAN},
 			{"wan_auth_host", "", NULL, EVM_RESTART_WAN},
 			{"wan_ttl_fix", "", NULL, EVM_RESTART_FIREWALL},
+			{"wan_ttl_value", "", NULL, EVM_RESTART_FIREWALL},
 			{"viptv_mode", "", NULL, EVM_RESTART_WAN},
 			{"viptv_ipaddr", "", NULL, EVM_RESTART_WAN},
 			{"viptv_netmask", "", NULL, EVM_RESTART_WAN},
@@ -390,6 +391,7 @@
 			{"wan_ppp_peer", "", NULL, EVM_RESTART_WAN},
 			{"wan_ppp_auth", "", NULL, EVM_RESTART_WAN},
 			{"wan_ppp_mppe", "", NULL, EVM_RESTART_WAN},
+			{"wan_ppp_lcp", "", NULL, EVM_RESTART_WAN},
 			{"wan_ppp_alcp", "", NULL, EVM_RESTART_WAN},
 			{"wan_ppp_pppd", "", NULL, EVM_RESTART_WAN},
 			{0,0,0,0}
@@ -495,6 +497,7 @@
 			{"dhcp_dns1_x", "", NULL, EVM_RESTART_DHCPD|EVM_REAPPLY_VPNSVR},
 			{"dhcp_dns2_x", "", NULL, EVM_RESTART_DHCPD|EVM_REAPPLY_VPNSVR},
 			{"dhcp_dns3_x", "", NULL, EVM_RESTART_DHCPD},
+			{"dhcp_dnsv6_x", "", NULL, EVM_RESTART_DHCPD},
 			{"dhcp_wins_x", "", NULL, EVM_RESTART_DHCPD|EVM_REAPPLY_VPNSVR},
 			{"dhcp_verbose", "", NULL, EVM_RESTART_DHCPD},
 			{"dhcp_static_x", "", NULL, EVM_RESTART_DHCPD},
@@ -502,7 +505,7 @@
 			{"dhcp_staticnum_x", "", NULL, EVM_RESTART_DHCPD},
 			{"dnsmasq.hosts", "File", NULL, EVM_RESTART_DHCPD},
 			{"dnsmasq.dnsmasq.conf", "File", NULL, EVM_RESTART_DHCPD},
-			{"dnsmasq.dnsmasq.servers", "File", NULL, EVM_RESTART_DHCPD},
+			{"dnsmasq.dhcp.conf", "File", NULL, EVM_RESTART_DHCPD},
 			{"http_access", "", NULL, EVM_RESTART_HTTPD},
 			{"http_proto", "", NULL, EVM_RESTART_HTTPD},
 			{"http_lanport", "", NULL, EVM_RESTART_HTTPD},
@@ -737,8 +740,7 @@
 #if defined(USE_MT76X2_AP)
 			{"wl_VgaClamp", "", NULL, EVM_RESTART_WIFI5},
 #endif
-#if defined(USE_MT7615_AP)
-			{"wl_band_steering", "", NULL, EVM_RESTART_WIFI5},
+#if defined (USE_WID_5G) && USE_WID_5G==7615
 			{"wl_mumimo", "", NULL, EVM_RESTART_WIFI5},
 #endif
 			{"wl_country_code", "", NULL, EVM_RESTART_WIFI5},
@@ -768,11 +770,13 @@
 			{"wl_guest_wpa_psk", "", NULL, EVM_RESTART_WIFI5},
 			{"wl_guest_macrule", "", NULL, EVM_RESTART_WIFI5},
 			{"wl_guest_mcs_mode", "", NULL, EVM_RESTART_WIFI5},
+			{"wl_KickStaRssiLow", "", NULL, EVM_RESTART_WIFI5},
+			{"wl_AssocReqRssiThres", "", NULL, EVM_RESTART_WIFI5},
 			{"RBRList", "Group", ARGV((char*)variables_WLANConfig11a_RBRList, "16", "32", "wl_wdsnum_x"), EVM_RESTART_WIFI5},
 #endif
 			{0,0,0,0}
 		};
-		
+
 #if defined (APP_SCUT)
 	struct variable variables_ScutclientConf[] = {
 			{"scutclient_enable", "",NULL, EVM_RESTART_SCUT},
@@ -783,19 +787,35 @@
 			{"scutclient_version","",NULL,EVM_RESTART_SCUT },
 			{"scutclient_hash","",NULL,EVM_RESTART_SCUT },
 			{"scutclient_hostname","",NULL,EVM_RESTART_SCUT },
-			{"scutclient_done","",NULL,EVM_RESTART_SCUT },
 			{"scutclient_watchcat","",NULL,FALSE},
+			{"scutclient_wdg_force","",NULL,FALSE},
+			{"scutclient_skip_udp_hb","",NULL,EVM_RESTART_SCUT},
 			{0,0,0,0}
 	};
 #endif
 
-#if defined(APP_CHINADNS)
-	struct variable variables_ChinadnsConf[] = {
-			{"chinadns_enable", "", NULL, EVM_RESTART_CHINADNS},
-			{"chinadns_bind", "", NULL, EVM_RESTART_CHINADNS},
-			{"chinadns_port", "", NULL, EVM_RESTART_CHINADNS},			
-			{"chinadns_server", "", NULL, EVM_RESTART_CHINADNS},			
-			{"chinadns_bi_filter", "", NULL, EVM_RESTART_CHINADNS},
+#if defined (APP_MENTOHUST)
+	struct variable variables_mentohustConf[] = {
+			{"mentohust_enable", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_username", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_password", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_nic", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_ip", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_mask", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_gw", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_dns", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_pinghost", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_timeout", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_interval", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_restart_wait", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_maxfail", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_startmode", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_dhcp", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_daemon", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_ver", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_datafile", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_dhcpscript", "", NULL, EVM_RESTART_MENTOHUST},
+			{"mentohust_service", "", NULL, EVM_RESTART_MENTOHUST},
 			{0,0,0,0}
 	};
 #endif
@@ -836,7 +856,6 @@
 			{"ss-tunnel_local_port","",NULL, EVM_RESTART_SS_TUNNEL},
 			{"ss-tunnel_remote","",NULL, EVM_RESTART_SS_TUNNEL},
 			{"ss-tunnel_mtu","",NULL, EVM_RESTART_SS_TUNNEL},
-			{"dnsmasq_china_conf_update","",NULL,FALSE},
 			{0,0,0,0}
 	};
 #endif
@@ -893,7 +912,7 @@
 #if defined(USE_MT76X2_AP)
 			{"rt_VgaClamp", "", NULL, EVM_RESTART_WIFI2},
 #endif
-#if defined(USE_MT7615_AP)
+#if defined (USE_WID_2G) && USE_WID_2G==7615
 			{"rt_turbo_qam", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_airtimefairness", "", NULL, EVM_RESTART_WIFI2},
 #endif
@@ -926,6 +945,8 @@
 			{"rt_guest_wpa_psk", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_guest_macrule", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_guest_mcs_mode", "", NULL, EVM_RESTART_WIFI2},
+			{"rt_KickStaRssiLow", "", NULL, EVM_RESTART_WIFI2},
+			{"rt_AssocReqRssiThres", "", NULL, EVM_RESTART_WIFI2},
 			{"rt_RBRList", "Group", ARGV((char*)variables_WLANConfig11b_rt_RBRList, "16", "32", "rt_wdsnum_x"), EVM_RESTART_WIFI2},
 			{0,0,0,0}
 		};
@@ -954,11 +975,11 @@
 #if defined(APP_SCUT)
 		{"ScutclientConf",		variables_ScutclientConf},
 #endif
+#if defined(APP_MENTOHUST)
+		{"mentohustConf",		variables_mentohustConf},
+#endif
 #if defined(APP_SHADOWSOCKS)
 		{"ShadowsocksConf",		variables_ShadowsocksConf},
-#endif
-#if defined(APP_CHINADNS)
-		{"ChinadnsConf",		variables_ChinadnsConf},
 #endif
 		{"LANGUAGE",			variables_Language},
 		{0,0}
@@ -1027,14 +1048,14 @@
 #if defined(APP_SCUT)
 		{EVM_RESTART_SCUT,		EVT_RESTART_SCUT,		RCN_RESTART_SCUT,	0},
 #endif
+#if defined(APP_MENTOHUST)
+		{EVM_RESTART_MENTOHUST,		EVT_RESTART_MENTOHUST,		RCN_RESTART_MENTOHUST,	0},
+#endif
 #if defined(APP_TTYD)
 		{EVM_RESTART_TTYD,		EVT_RESTART_TTYD,		RCN_RESTART_TTYD,	0},
 #endif
 #if defined(APP_VLMCSD)
 		{EVM_RESTART_VLMCSD,	EVT_RESTART_VLMCSD,		RCN_RESTART_VLMCSD,	0},
-#endif
-#if defined(APP_CHINADNS)
-		{EVM_RESTART_CHINADNS,	EVT_RESTART_CHINADNS,	RCN_RESTART_CHINADNS, 0},
 #endif
 #if defined(APP_DNSFORWARDER)
 		{EVM_RESTART_DNSFORWARDER,	EVT_RESTART_DNSFORWARDER,	RCN_RESTART_DNSFORWARDER, 0},

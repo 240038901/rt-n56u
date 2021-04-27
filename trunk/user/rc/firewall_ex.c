@@ -1281,12 +1281,19 @@ ipt_mangle_rules(const char *man_if, const char *wan_if, int use_man)
 {
 	FILE *fp;
 	int i_wan_ttl_fix;
+	int i_wan_ttl_value;
 	const char *dtype;
 	const char *ipt_file = "/tmp/ipt_mangle.rules";
 
 	i_wan_ttl_fix = nvram_get_int("wan_ttl_fix");
+	i_wan_ttl_value = nvram_get_int("wan_ttl_value");
+
 	if (i_wan_ttl_fix == 2 && nvram_invmatch("mr_enable_x", "1"))
 		i_wan_ttl_fix = 0;
+
+	if (i_wan_ttl_value > 1) {
+			fput_int("/proc/sys/net/ipv4/ip_default_ttl", i_wan_ttl_value);
+	}
 
 	if (i_wan_ttl_fix) {
 		module_smart_load("iptable_mangle", NULL);
@@ -1704,22 +1711,8 @@ ip6t_mangle_rules(char *man_if)
 static void
 ip6t_disable_filter(void)
 {
-	FILE *fp;
-	const char *ipt_file = "/tmp/ip6t_disable_filter.rules";
-
-	if (!(fp=fopen(ipt_file, "w")))
-		return;
-
-	fprintf(fp, "*%s\n", "filter");
-	fprintf(fp, ":%s %s [0:0]\n", "INPUT", "ACCEPT");
-	fprintf(fp, ":%s %s [0:0]\n", "FORWARD", "ACCEPT");
-	fprintf(fp, ":%s %s [0:0]\n", "OUTPUT", "ACCEPT");
-	fprintf(fp, "-F\n");
-
-	fprintf(fp, "COMMIT\n\n");
-	fclose(fp);
-
-	doSystem("ip6tables-restore %s", ipt_file);
+	doSystem("ip6tables -P FORWARD ACCEPT");
+	doSystem("ip6tables -F FORWARD");
 }
 #endif
 #endif

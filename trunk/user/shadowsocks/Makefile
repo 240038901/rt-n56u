@@ -1,7 +1,7 @@
 THISDIR = $(shell pwd)
 
-SRC_SS_NAME=shadowsocks-libev-3.2.0
-#https://github.com/shadowsocks/shadowsocks-libev/releases/download/v3.2.0/shadowsocks-libev-3.2.0.tar.gz
+SRC_SS_NAME=shadowsocks-libev-3.3.5
+#https://github.com/shadowsocks/shadowsocks-libev.git
 
 SRC_SSR_NAME=shadowsocksr-libev-master
 ARCHIVE_SSR_NAME=shadowsocksr-libev-master-e2373d7
@@ -11,13 +11,13 @@ GFWLIST_NAME=dnsmasq_gfwlist.conf
 GFWLIST_URL=https://cokebar.github.io/gfwlist2dnsmasq/$(GFWLIST_NAME)
 GFWLIST_DIR=gfwlist
 
-all: gfwlist extract_test config_test
+all: gfwlist_dl extract_test config_test
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
-	$(MAKE) -C $(SRC_SSR_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_SSR_NAME)
 endif
-	$(MAKE) -C $(SRC_SS_NAME)
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_SS_NAME)
 
-gfwlist:
+gfwlist_dl:
 ifeq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
 	mkdir -p $(GFWLIST_DIR)
 	( if [ ! -f $(GFWLIST_DIR)/.finish ]; then \
@@ -113,6 +113,7 @@ ifeq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
 	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_SSR_NAME)/src/ss-local /usr/bin/ssr-local
 	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_SS_NAME)/src/ss-redir /usr/bin/ss-orig-redir
 	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_SS_NAME)/src/ss-tunnel /usr/bin/ss-orig-tunnel
+	$(ROMFSINST) -p +x $(THISDIR)/$(SRC_SS_NAME)/src/ss-local /usr/bin/ss-orig-local
 	ln -sf /var/ss-redir $(ROMFSDIR)/usr/bin/ss-redir
 	ln -sf /var/ss-tunnel $(ROMFSDIR)/usr/bin/ss-local
 endif

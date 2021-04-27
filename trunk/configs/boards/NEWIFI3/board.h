@@ -1,8 +1,8 @@
-/* newifi3(d2) */
+/* NEWIFI3(d2) */
 
-#define BOARD_PID		"newifi3"
-#define BOARD_NAME		"newifi3"
-#define BOARD_DESC		"newifi3 Wireless Router"
+#define BOARD_PID		"NEWIFI3"
+#define BOARD_NAME		"NEWIFI3"
+#define BOARD_DESC		"NEWIFI3 Wireless Router"
 #define BOARD_VENDOR_NAME	"Diting Technology"
 #define BOARD_VENDOR_URL	"http://www.newifi.com/"
 #define BOARD_MODEL_URL		"http://www.newifi.com/"
@@ -30,4 +30,6 @@
 #define BOARD_HAS_EPHY_L1000	1
 #define BOARD_HAS_EPHY_W1000	1
 #define BOARD_NUM_UPHY_USB3	1
+#define BOARD_GPIO_PWR_USB	11
+#define BOARD_GPIO_PWR_USB_ON	1
 #define BOARD_USB_PORT_SWAP	0

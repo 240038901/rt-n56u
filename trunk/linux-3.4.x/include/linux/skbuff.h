@@ -504,6 +504,9 @@ struct sk_buff {
 #ifdef CONFIG_NETWORK_SECMARK
 	__u32			secmark;
 #endif
+#ifdef CONFIG_SHORTCUT_FE
+	__u8			fast_forwarded:1;
+#endif
 	union {
 		__u32		mark;
 		__u32		dropcount;
@@ -1572,6 +1575,11 @@ static inline void skb_set_mac_header(struct sk_buff *skb, const int offset)
 	skb->mac_header = skb->data + offset;
 }
 #endif /* NET_SKBUFF_DATA_USES_OFFSET */
+
+static inline u32 skb_mac_header_len(const struct sk_buff *skb)
+{
+	return skb->network_header - skb->mac_header;
+}
 
 static inline void skb_mac_header_rebuild(struct sk_buff *skb)
 {

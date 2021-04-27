@@ -56,9 +56,6 @@ function initial(){
 
 	fill_info();
 
-	if ($j('tr:visible').length > 13)
-		$("row_more_links").style.display = "none";
-
 	id_update_wanip = setTimeout("update_wanip();", 2500);
 }
 
@@ -373,6 +370,8 @@ function submitInternet(v){
           <option value="../Advanced_Exposed_Content.asp"><#menu5_3_5#></option>
           <option value="../Advanced_DDNS_Content.asp"><#menu5_3_6#></option>
           <option value="../Advanced_Modem_others.asp"><#menu5_4_4#></option>
+          <option value="../vpnsrv.asp"><#menu2#></option>
+          <option value="../vpncli.asp"><#menu6#></option>
         </select>
     </td>
   </tr>

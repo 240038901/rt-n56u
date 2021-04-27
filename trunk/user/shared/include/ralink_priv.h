@@ -42,12 +42,7 @@
 #define BW_20			0
 #define BW_40			1
 #define BW_80			2
-#if defined (BOARD_K2P)
 #define BW_160			3
-#define BW_BOTH			7
-#else
-#define BW_BOTH			3
-#endif
 #define BW_10			4 // not used
 
 #define WDS_DISABLE_MODE	0
@@ -223,6 +218,9 @@ typedef struct _PAIR_CHANNEL_FREQ_ENTRY
 #if defined (CONFIG_RALINK_MT7621)
 #define OFFSET_MAC_GMAC0	0xE000
 #define OFFSET_MAC_GMAC2	0xE006
+#elif defined (BOARD_360P2)
+#define OFFSET_MAC_GMAC0	0xFFE8
+#define OFFSET_MAC_GMAC2	0xFFEE
 #else
 #define OFFSET_MAC_GMAC0	0x0028
 #define OFFSET_MAC_GMAC2	0x0022

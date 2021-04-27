@@ -77,6 +77,7 @@ func_save()
 {
 	local fsz
 
+	logger -t "Storage save" "Save storage files to MTD partition \"$mtd_part_dev\""
 	echo "Save storage files to MTD partition \"$mtd_part_dev\""
 	rm -f $tbz
 	md5sum -c -s $hsh 2>/dev/null
@@ -92,6 +93,7 @@ func_save()
 		mtd_write write $tbz $mtd_part_name
 		if [ $? -eq 0 ] ; then
 			echo "Done."
+			logger -t "Storage save" "Done."
 		else
 			result=1
 			echo "Error! MTD write FAILED"
@@ -194,7 +196,6 @@ func_fill()
 	dir_crond="$dir_storage/cron/crontabs"
 	dir_wlan="$dir_storage/wlan"
 	dir_chnroute="$dir_storage/chinadns"
-	dir_dnsmasq_china_conf="$dir_storage/dnsmasq-china-conf"
 	dir_gfwlist="$dir_storage/gfwlist"
 
 	script_start="$dir_storage/start_script.sh"
@@ -209,7 +210,7 @@ func_fill()
 
 	user_hosts="$dir_dnsmasq/hosts"
 	user_dnsmasq_conf="$dir_dnsmasq/dnsmasq.conf"
-	user_dnsmasq_serv="$dir_dnsmasq/dnsmasq.servers"
+	user_dhcp_conf="$dir_dnsmasq/dhcp.conf"
 	user_ovpnsvr_conf="$dir_ovpnsvr/server.conf"
 	user_ovpncli_conf="$dir_ovpncli/client.conf"
 	user_inadyn_conf="$dir_inadyn/inadyn.conf"
@@ -218,7 +219,6 @@ func_fill()
 	user_sswan_secrets="$dir_sswan/ipsec.secrets"
 	
 	chnroute_file="/etc_ro/chnroute.bz2"
-	dnsmasq_china_conf_file="/etc_ro/dnsmasq-china-conf/dnsmasq-china-conf.bz2"
 	gfwlist_conf_file="/etc_ro/gfwlist.bz2"
 
 	# create crond dir
@@ -231,13 +231,6 @@ func_fill()
 	if [ ! -d "$dir_chnroute" ] ; then
 		if [ -f "$chnroute_file" ]; then
 			mkdir -p "$dir_chnroute" && tar jxf "$chnroute_file" -C "$dir_chnroute"
-		fi
-	fi
-
-	# create dnsmasq-china-conf
-	if [ ! -d "$dir_dnsmasq_china_conf" ] ; then
-		if [ -f "$dnsmasq_china_conf_file" ]; then	
-			mkdir -p "$dir_dnsmasq_china_conf" && tar jxf "$dnsmasq_china_conf_file" -C "$dir_dnsmasq_china_conf"
 		fi
 	fi
 
@@ -269,6 +262,23 @@ func_fill()
 #modprobe ip_set_list_set
 #modprobe xt_set
 
+#drop caches
+sync && echo 3 > /proc/sys/vm/drop_caches
+
+# Roaming assistant for mt76xx WiFi
+#iwpriv ra0 set KickStaRssiLow=-85
+#iwpriv ra0 set AssocReqRssiThres=-80
+#iwpriv rai0 set KickStaRssiLow=-85
+#iwpriv rai0 set AssocReqRssiThres=-80
+
+# Mount SATA disk
+#mdev -s
+
+#wing <HOST:443> <PASS>
+#wing 192.168.1.9:1080
+#ipset add gfwlist 8.8.4.4
+
+
 EOF
 		chmod 755 "$script_started"
 	fi
@@ -294,6 +304,8 @@ EOF
 
 ### Custom user script
 ### Called after internal iptables reconfig (firewall update)
+
+#wing resume
 
 EOF
 		chmod 755 "$script_postf"
@@ -479,6 +491,10 @@ dhcp-option=252,"\n"
 
 ### Log for all queries
 #log-queries
+
+### Keep DHCP host name valid at any times
+#dhcp-to-host
+
 EOF
 	if [ -f /usr/bin/vlmcsd ]; then
 		cat >> "$user_dnsmasq_conf" <<EOF
@@ -487,20 +503,13 @@ srv-host=_vlmcs._tcp,my.router,1688,0,100
 
 EOF
 	fi
-	if [ -f /usr/bin/chinadns ]; then
-		cat >> "$user_dnsmasq_conf" <<EOF
-### ChinaDNS related
-#no-resolv
-#server=127.0.0.1#5302
 
-EOF
-	fi
-	if [ -d /etc_ro/dnsmasq-china-conf ]; then
+	if [ -f /usr/bin/wing ]; then
 		cat >> "$user_dnsmasq_conf" <<EOF
-### dnsmasq-china-list related
-#no-resolv
-#conf-dir=/etc/storage/dnsmasq-china-conf
-#server=127.0.0.1#5301
+# Custom domains to gfwlist
+#gfwlist=mit.edu
+#gfwlist=openwrt.org,lede-project.org
+#gfwlist=github.com,github.io,githubusercontent.com
 
 EOF
 	fi
@@ -517,14 +526,12 @@ EOF
 	fi
 
 	# create user dns servers
-	if [ ! -f "$user_dnsmasq_serv" ] ; then
-		cat > "$user_dnsmasq_serv" <<EOF
-# Custom user servers file for dnsmasq
-# Example:
-#server=/mit.ru/izmuroma.ru/10.25.11.30
+	if [ ! -f "$user_dhcp_conf" ] ; then
+		cat > "$user_dhcp_conf" <<EOF
+#6C:96:CF:E0:95:55,192.168.1.10,iMac
 
 EOF
-		chmod 644 "$user_dnsmasq_serv"
+		chmod 644 "$user_dhcp_conf"
 	fi
 
 	# create user inadyn.conf"

@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <sys/time.h>
 
 #include "rc.h"
@@ -131,7 +132,11 @@ catch_sig_fatal(int sig)
 	sleep(1);
 	sync();
 
+#ifdef MTD_FLASH_32M_REBOOT_BUG
+	system("/bin/mtd_write -r unlock mtd1");
+#else
 	reboot(RB_AUTOBOOT);
+#endif
 
 	do {
 		sleep(1);
@@ -477,11 +482,7 @@ init_main_loop(void)
 	/* Basic initialization */
 	init_time();
 #if BOARD_RAM_SIZE > 32
-#if defined (BOARD_K2P) || BOARD_RAM_SIZE > 128
-	system("dev_init.sh -b");
-#else
 	system("dev_init.sh");
-#endif
 #else
 	system("dev_init.sh -l");
 #endif

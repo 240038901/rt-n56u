@@ -625,6 +625,8 @@ char* GetBW(int BW)
 		return "40M";
 	case BW_80:
 		return "80M";
+	case BW_160:
+		return "160";
 	default:
 		return "N/A";
 	}
@@ -810,7 +812,11 @@ is_mac_in_sta_list(const unsigned char* p_mac)
 		RT_802_11_MAC_TABLE *mp = (RT_802_11_MAC_TABLE *)wrq.u.data.pointer;
 		for (i = 0; i < mp->Num; i++) {
 			if (memcmp(mp->Entry[i].Addr, p_mac, ETHER_ADDR_LEN) == 0)
+#if defined (BOARD_MT7615_DBDC)
+				return (mp->Entry[i].ApIdx == 2) ? 1 : 2;
+#else
 				return (mp->Entry[i].ApIdx == 0) ? 1 : 2;
+#endif
 		}
 	}
 #endif
@@ -829,6 +835,25 @@ print_apcli_wds_header(webs_t wp, const char *caption)
 				   "BSSID", "PhyMode", " BW", "MCS", "SGI", "LDPC", "STBC", "TRate", "RSSI");
 
 	return ret;
+}
+
+static int
+get_rssi_from_me(RT_802_11_MAC_ENTRY *me, int num_ss_rx)
+{
+	int rssi;
+
+	rssi = -127;
+	if ((int)me->AvgRssi0 > rssi && me->AvgRssi0 != 0)
+		rssi = (int)me->AvgRssi0;
+	if (num_ss_rx > 1) {
+		if ((int)me->AvgRssi1 > rssi && me->AvgRssi1 != 0)
+			rssi = (int)me->AvgRssi1;
+	}
+	if (num_ss_rx > 2) {
+		if ((int)me->AvgRssi2 > rssi && me->AvgRssi2 != 0)
+			rssi = (int)me->AvgRssi2;
+	}
+	return rssi;
 }
 
 static int
@@ -873,7 +898,11 @@ print_sta_list(webs_t wp, RT_802_11_MAC_TABLE *mp, int num_ss_rx, int ap_idx)
 
 	ret = 0;
 
+#if defined (BOARD_MT7615_DBDC)
+	ret += websWrite(wp, "\nAP %s Stations List\n", (ap_idx == 0 || ap_idx == 2) ? "Main" : "Guest");
+#else
 	ret += websWrite(wp, "\nAP %s Stations List\n", (ap_idx == 0) ? "Main" : "Guest");
+#endif
 	ret += websWrite(wp, "----------------------------------------\n");
 	ret += websWrite(wp, "%-19s%-8s%-4s%-4s%-4s%-5s%-5s%-6s%-5s%-4s%-12s\n",
 			   "MAC", "PhyMode", " BW", "MCS", "SGI", "LDPC", "STBC", "TRate", "RSSI", "PSM", "Connect Time");
@@ -1085,7 +1114,7 @@ print_mac_table(webs_t wp, const char *wif_name, int num_ss_rx, int is_guest_on)
 	RT_802_11_MAC_TABLE *mp;
 	int ret = 0;
 
-#if defined (BOARD_K2P)
+#if defined (BOARD_MT7615_DBDC)
 /*
 	5g main ra0: apidx=0
 	5g guest ra1: apidx=1
@@ -1106,13 +1135,13 @@ print_mac_table(webs_t wp, const char *wif_name, int num_ss_rx, int is_guest_on)
 
 	if (wl_ioctl(wif_name, RTPRIV_IOCTL_GET_MAC_TABLE_STRUCT, &wrq) >= 0) {
 		mp = (RT_802_11_MAC_TABLE*)wrq.u.data.pointer;
-#if defined (BOARD_K2P)
+#if defined (BOARD_MT7615_DBDC)
 		ret += print_sta_list(wp, mp, num_ss_rx, apidx); 
 #else
 		ret += print_sta_list(wp, mp, num_ss_rx, 0); 
 #endif
 		if (is_guest_on)
-#if defined (BOARD_K2P)
+#if defined (BOARD_MT7615_DBDC)
 			ret += print_sta_list(wp, mp, num_ss_rx, apidx_guest);
 #else
 			ret += print_sta_list(wp, mp, num_ss_rx, 1);
@@ -1357,6 +1386,7 @@ ej_wl_auth_list(int eid, webs_t wp, int argc, char **argv)
 	int i, firstRow = 1, ret = 0;
 	char mac_table_data[4096];
 	char mac[18];
+	int num_ss_rx;
 
 #if BOARD_HAS_5G_RADIO
 	/* query wl for authenticated sta list */
@@ -1367,6 +1397,7 @@ ej_wl_auth_list(int eid, webs_t wp, int argc, char **argv)
 	if (wl_ioctl(IFNAME_5G_MAIN, RTPRIV_IOCTL_GET_MAC_TABLE_STRUCT, &wrq) >= 0)
 	{
 		RT_802_11_MAC_TABLE *mp = (RT_802_11_MAC_TABLE *)wrq.u.data.pointer;
+		num_ss_rx = nvram_wlan_get_int(1, "stream_rx");
 		for (i=0; i<mp->Num; i++)
 		{
 			sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X",
@@ -1379,10 +1410,12 @@ ej_wl_auth_list(int eid, webs_t wp, int argc, char **argv)
 			else
 				ret+=websWrite(wp, ", ");
 			
-			ret+=websWrite(wp, "\"%s\"", mac);
+			ret+=websWrite(wp, "\"%s\":%d", mac, get_rssi_from_me(&mp->Entry[i], num_ss_rx));
 		}
 	}
 #endif
+
+	num_ss_rx = nvram_wlan_get_int(0, "stream_rx");
 
 #if defined(USE_RT3352_MII)
 	if (nvram_get_int("inic_disable") == 1)
@@ -1408,7 +1441,7 @@ ej_wl_auth_list(int eid, webs_t wp, int argc, char **argv)
 			else
 				ret+=websWrite(wp, ", ");
 			
-			ret+=websWrite(wp, "\"%s\"", mac);
+			ret+=websWrite(wp, "\"%s\":%d", mac, get_rssi_from_me(&mp->Entry[i], num_ss_rx));
 		}
 	}
 #else
@@ -1432,7 +1465,7 @@ ej_wl_auth_list(int eid, webs_t wp, int argc, char **argv)
 			else
 				ret+=websWrite(wp, ", ");
 			
-			ret+=websWrite(wp, "\"%s\"", mac);
+			ret+=websWrite(wp, "\"%s\":%d", mac, get_rssi_from_me(&mp->Entry[i], num_ss_rx));
 		}
 	}
 #endif
@@ -1441,9 +1474,8 @@ ej_wl_auth_list(int eid, webs_t wp, int argc, char **argv)
 }
 
 
-#define SSURV_LINE_LEN		(4+33+20+23+9+7+7+3)		// Channel+SSID+Bssid+Security+Signal+WiressMode+ExtCh+NetworkType
+#define SSURV_LINE_LEN		(4+33+20+23+9+9+7+3)		// Channel+SSID+Bssid+Security+Signal+WiressMode+ExtCh+NetworkType
 #define SSURV_LINE_LEN_WPS	(4+33+20+23+9+7+7+3+4+5)	// Channel+SSID+Bssid+Security+Signal+WiressMode+ExtCh+NetworkType+WPS+PIN
-#define SSURV_LINE_LEN_MT7615_WPS (4+4+67+20+23+9+9+7+3+4+5+7)	// No+Ch+SSID+BSSID+Security+Siganl+WiressMode+ExtCH+NetworkType+WPS+DPID+BcnRept
 
 #if BOARD_HAS_5G_RADIO
 int
@@ -1453,9 +1485,7 @@ ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv)
 	int apCount = 0;
 	char data[8192];
 	char ssid_str[128];
-#if defined (USE_MT7615_AP)
-	char site_line[SSURV_LINE_LEN_MT7615_WPS+1];
-#elif defined (USE_WSC_WPS) && !defined (USE_MT7615_AP)
+#if defined (USE_WSC_WPS)
 	char site_line[SSURV_LINE_LEN_WPS+1];
 #else
 	char site_line[SSURV_LINE_LEN+1];
@@ -1494,14 +1524,10 @@ ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv)
 		return websWrite(wp, "[%s]", empty);
 	}
 
-#if defined (USE_MT7615_AP)
-	line_len = SSURV_LINE_LEN_MT7615_WPS;
-#elif defined (USE_WSC_WPS) && !defined (USE_MT7615_AP)
+#if defined (USE_WSC_WPS)
 	line_len = SSURV_LINE_LEN_WPS;
-//	dbg("%-4s%-33s%-20s%-23s%-9s%-7s%-7s%-3s%-4s%-5s\n", "Ch", "SSID", "BSSID", "Security", "Signal(%)", "W-Mode", " ExtCH", "NT", "WPS", "DPID");
 #else
 	line_len = SSURV_LINE_LEN;
-//	dbg("%-4s%-33s%-20s%-23s%-9s%-7s%-7s%-3s\n", "Ch", "SSID", "BSSID", "Security", "Signal(%)", "W-Mode", " ExtCH", "NT");
 #endif
 
 	retval += websWrite(wp, "[");
@@ -1513,18 +1539,12 @@ ej_wl_scan_5g(int eid, webs_t wp, int argc, char **argv)
 		while (*sp && ((len - (sp-op)) >= 0))
 		{
 			memcpy(site_line, sp, line_len);
-			
-#if defined (USE_WID_5G) && USE_WID_5G==7615		
-			memcpy(site_chnl, sp+4, 3);
-			memcpy(site_ssid, sp+8, 33);
-			memcpy(site_bssid, sp+75, 20);
-			memcpy(site_signal, sp+118, 9);
-#else
+
 			memcpy(site_chnl, sp, 3);
 			memcpy(site_ssid, sp+4, 33);
 			memcpy(site_bssid, sp+37, 20);
 			memcpy(site_signal, sp+80, 9);
-#endif
+
 			site_line[line_len] = '\0';
 			site_chnl[3] = '\0';
 			site_ssid[33] = '\0';
@@ -1566,9 +1586,7 @@ ej_wl_scan_2g(int eid, webs_t wp, int argc, char **argv)
 	int retval = 0, apCount = 0;
 	char data[8192];
 	char ssid_str[128];
-#if defined (USE_MT7615_AP)
-	char site_line[SSURV_LINE_LEN_MT7615_WPS+1];
-#elif (defined (USE_WSC_WPS) || defined(USE_RT3352_MII)) && !defined (USE_MT7615_AP)
+#if (defined (USE_WSC_WPS) || defined(USE_RT3352_MII))
 	char site_line[SSURV_LINE_LEN_WPS+1];
 #else
 	char site_line[SSURV_LINE_LEN+1];
@@ -1607,14 +1625,10 @@ ej_wl_scan_2g(int eid, webs_t wp, int argc, char **argv)
 		return websWrite(wp, "[%s]",empty);
 	}
 
-#if defined (USE_MT7615_AP)
-	line_len = SSURV_LINE_LEN_MT7615_WPS;
-#elif (defined (USE_WSC_WPS) || defined(USE_RT3352_MII)) && !defined (USE_MT7615_AP)
+#if (defined (USE_WSC_WPS) || defined(USE_RT3352_MII))
 	line_len = SSURV_LINE_LEN_WPS;
-//	dbg("%-4s%-33s%-20s%-23s%-9s%-7s%-7s%-3s%-4s%-5s\n", "Ch", "SSID", "BSSID", "Security", "Signal(%)", "W-Mode", " ExtCH", "NT", "WPS", "DPID");
 #else
 	line_len = SSURV_LINE_LEN;
-//	dbg("%-4s%-33s%-20s%-23s%-9s%-7s%-7s%-3s\n", "Ch", "SSID", "BSSID", "Security", "Signal(%)", "W-Mode", " ExtCH", "NT");
 #endif
 	retval += websWrite(wp, "[");
 	if (wrq.u.data.length > 0)
@@ -1625,18 +1639,12 @@ ej_wl_scan_2g(int eid, webs_t wp, int argc, char **argv)
 		while (*sp && ((len - (sp-op)) >= 0))
 		{
 			memcpy(site_line, sp, line_len);
-			
-#if defined (USE_WID_2G) && USE_WID_2G==7615		
-			memcpy(site_chnl, sp+4, 3);
-			memcpy(site_ssid, sp+8, 33);
-			memcpy(site_bssid, sp+75, 20);
-			memcpy(site_signal, sp+118, 9);
-#else
+
 			memcpy(site_chnl, sp, 3);
 			memcpy(site_ssid, sp+4, 33);
 			memcpy(site_bssid, sp+37, 20);
 			memcpy(site_signal, sp+80, 9);
-#endif
+
 			site_line[line_len] = '\0';
 			site_chnl[3] = '\0';
 			site_ssid[33] = '\0';

@@ -38,6 +38,7 @@
 
 #define DNS_RESOLV_CONF			"/etc/resolv.conf"
 #define DNS_SERVERS_FILE		"/tmp/dnsmasq.servers"
+#define DNS_RELAY_QUERIES_MAX		512
 
 #define SCRIPT_UDHCPC_LAN		"/tmp/udhcpc_lan.script"
 #define SCRIPT_UDHCPC_WAN		"/tmp/udhcpc.script"
@@ -518,6 +519,12 @@ void stop_scutclient(void);
 void start_scutclient(void);
 void restart_scutclient(void);
 #endif
+#if defined(APP_MENTOHUST)
+int is_mentohust_run(void);
+void stop_mentohust(void);
+void start_mentohust(void);
+void restart_mentohust(void);
+#endif
 #if defined(APP_TTYD)
 void stop_ttyd(void);
 void start_ttyd(void);
@@ -541,18 +548,10 @@ void restart_vlmcsd(void);
 #if defined(APP_NAPT66)
 void start_napt66(void);
 #endif
-#if defined(APP_CHINADNS)
-void stop_chinadns(void);
-void start_chinadns(void);
-void restart_chinadns(void);
-#endif
 #if defined(APP_DNSFORWARDER)
 void stop_dnsforwarder(void);
 void start_dnsforwarder(void);
 void restart_dnsforwarder(void);
-#endif
-#if defined(APP_DNSMASQ_CHINA_CONF)
-void update_dnsmasq_china_conf(void);
 #endif
 
 /* services_ex.c */

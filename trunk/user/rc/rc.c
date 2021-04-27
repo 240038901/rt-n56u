@@ -465,8 +465,8 @@ nvram_convert_misc_values(void)
 	if (strlen(nvram_wlan_get(1, "gmode")) < 1)
 		nvram_wlan_set_int(1, "gmode", 4); // a/n/ac Mixed
 
-	if (nvram_wlan_get_int(1, "HT_BW") > 2)
-		nvram_wlan_set_int(1, "HT_BW", 2);
+	if (nvram_wlan_get_int(1, "HT_BW") > 3)
+		nvram_wlan_set_int(1, "HT_BW", 3);
 #else
 	if (strlen(nvram_wlan_get(1, "gmode")) < 1)
 		nvram_wlan_set_int(1, "gmode", 2); // a/n Mixed
@@ -799,6 +799,12 @@ LED_CONTROL(int gpio_led, int flag)
 #endif
 #endif
 	{
+#if defined (BOARD_HC5761A)
+		if (gpio_led == BOARD_GPIO_LED_SW5G) {
+			cpu_gpio_mode_set_bit(40, 1);
+			cpu_gpio_mode_set_bit(41, 0);
+		}
+#endif
 		if (is_soft_blink)
 			cpu_gpio_led_enabled(gpio_led, (flag == LED_OFF) ? 0 : 1);
 		
@@ -817,9 +823,6 @@ init_crontab(void)
 	ret |= system("/sbin/check_crontab.sh a/5 a a a a ss-watchcat.sh");
 	ret |= system("/sbin/check_crontab.sh 0 8 a/10 a a update_chnroute.sh");
 	ret |= system("/sbin/check_crontab.sh 0 7 a/10 a a update_gfwlist.sh");
-#endif
-#if defined (APP_DNSMASQ_CHINA_CONF)
-	ret |= system("/sbin/check_crontab.sh 0 9 a/10 a a update_dnsmasq_china_conf.sh");
 #endif
 	return ret;
 }
@@ -896,6 +899,13 @@ init_router(void)
 
 	if (log_remote)
 		start_logger(1);
+
+#if defined (BOARD_HC5761A)
+	cpu_gpio_mode_set_bit(38, 1);
+	cpu_gpio_mode_set_bit(39, 0);
+	cpu_gpio_set_pin_direction(BOARD_GPIO_PWR_USB, 1);
+	cpu_gpio_set_pin(BOARD_GPIO_PWR_USB, BOARD_GPIO_PWR_USB_ON);
+#endif
 
 	start_dns_dhcpd(is_ap_mode);
 #if defined (APP_SMBD) || defined (APP_NMBD)
@@ -999,7 +1009,7 @@ void
 handle_notifications(void)
 {
 	int i, stop_handle = 0;
-	char notify_name[256];
+	char notify_name[300];
 
 	DIR *directory = opendir(DIR_RC_NOTIFY);
 	if (!directory)
@@ -1249,6 +1259,16 @@ handle_notifications(void)
 			stop_scutclient();
 		}
 #endif
+#if defined(APP_MENTOHUST)
+		else if (strcmp(entry->d_name, RCN_RESTART_MENTOHUST) == 0)
+		{
+			restart_mentohust();
+		}
+		else if (strcmp(entry->d_name, "stop_mentohust") == 0)
+		{
+			stop_mentohust();
+		}
+#endif
 #if defined(APP_TTYD)
 		else if (strcmp(entry->d_name, RCN_RESTART_TTYD) == 0)
 		{
@@ -1279,22 +1299,10 @@ handle_notifications(void)
 			restart_vlmcsd();
 		}
 #endif
-#if defined(APP_CHINADNS)
-		else if (strcmp(entry->d_name, RCN_RESTART_CHINADNS) == 0)
-		{
-			restart_chinadns();
-		}
-#endif
 #if defined(APP_DNSFORWARDER)
 		else if (strcmp(entry->d_name, RCN_RESTART_DNSFORWARDER) == 0)
 		{
 			restart_dnsforwarder();
-		}
-#endif
-#if defined(APP_DNSMASQ_CHINA_CONF)
-		else if (strcmp(entry->d_name, RCN_RESTART_DNSMASQ_CHINA_CONF_UPD) == 0)
-		{
-			update_dnsmasq_china_conf();
 		}
 #endif
 #if defined(APP_SMBD) || defined(APP_NMBD)

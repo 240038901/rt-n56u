@@ -7,11 +7,14 @@ ROMFS_DIR = $(ROOTDIR)/romfs
 include $(ROOTDIR)/user/shared/boards.mk
 
 PROJECT_HOME_URL="https:\/\/bitbucket.org\/padavan\/rt-n56u\/"
-LABEL_COPYRIGHT_TEXT="© 2011-2016 Padavan \& N56U project community"
+PROJECT_HOME_URL_MOD="https:\/\/github.com\/hanwckf\/rt-n56u\/"
+
+LABEL_COPYRIGHT_TEXT='© 2011-2021 <a href="https:\/\/bitbucket.org\/padavan\/rt-n56u" target="blank">Padavan<\/a> \& N56U project community \& by <a href="https:\/\/github.com\/hanwckf\/rt-n56u" target="blank">hanwckf<\/a>'
 
 BOARD_PATTERN=s/ZVMODELVZ/$(CONFIG_FIRMWARE_PRODUCT_ID)/g
 COPYR_PATTERN=s/ZVCOPYRVZ/$(LABEL_COPYRIGHT_TEXT)/g
 DWURL_PATTERN=s/ZVDWURLVZ/$(PROJECT_HOME_URL)/g
+DWURL_MOD_PATTERN=s/ZVMODWURLVZ/$(PROJECT_HOME_URL_MOD)/g
 
 WEBUI_NAME=n56u_ribbon_fixed
 
@@ -115,17 +118,31 @@ ifeq ($(CONFIG_FIRMWARE_INCLUDE_LANG_CN),y)
 	sed $(BOARD_PATTERN) -i $(ROMFS_DIR)/www/CN.dict
 	sed $(COPYR_PATTERN) -i $(ROMFS_DIR)/www/CN.dict
 	sed $(DWURL_PATTERN) -i $(ROMFS_DIR)/www/CN.dict
+	sed $(DWURL_MOD_PATTERN) -i $(ROMFS_DIR)/www/CN.dict
 endif
 	cat $(ROMFS_DIR)/www/EN.header dict/EN.footer > $(ROMFS_DIR)/www/EN.dict
 	sed $(BOARD_PATTERN) -i $(ROMFS_DIR)/www/EN.dict
 	sed $(COPYR_PATTERN) -i $(ROMFS_DIR)/www/EN.dict
 	sed $(DWURL_PATTERN) -i $(ROMFS_DIR)/www/EN.dict
+	sed $(DWURL_MOD_PATTERN) -i $(ROMFS_DIR)/www/EN.dict
 	rm -f $(ROMFS_DIR)/www/EN.header
 	rm -f $(ROMFS_DIR)/www/bootstrap/js/bootstrap.js
 	rm -f $(ROMFS_DIR)/www/bootstrap/js/engage.itoggle.js
 	rm -f $(ROMFS_DIR)/www/bootstrap/js/jquery.backgroundpos.min.js
 	rm -f $(ROMFS_DIR)/www/bootstrap/js/jquery.easing.1.3.js
 	rm -f $(ROMFS_DIR)/www/bootstrap/css/bootstrap.css
+ifeq ($(BOARD_HAS_2G_RADIO),0)
+	rm -f $(INSTALLDIR)/www/Advanced_ACL2g_Content.asp
+	rm -f $(INSTALLDIR)/www/Advanced_WAdvanced2g_Content.asp
+	rm -f $(INSTALLDIR)/www/Advanced_WGuest2g_Content.asp
+	rm -f $(INSTALLDIR)/www/Advanced_Wireless2g_Content.asp
+	rm -f $(INSTALLDIR)/www/Advanced_WMode2g_Content.asp
+	rm -f $(INSTALLDIR)/www/Advanced_WSecurity2g_Content.asp
+	rm -f $(INSTALLDIR)/www/Main_WStatus2g_Content.asp
+	rm -f $(INSTALLDIR)/www/wireless_2g.js
+	rm -f $(INSTALLDIR)/www/wds_aplist_2g.asp
+	rm -f $(INSTALLDIR)/www/device-map/router2g.asp
+endif
 ifeq ($(BOARD_HAS_5G_RADIO),0)
 	rm -f $(INSTALLDIR)/www/Advanced_ACL_Content.asp
 	rm -f $(INSTALLDIR)/www/Advanced_WAdvanced_Content.asp
@@ -169,11 +186,13 @@ ifneq ($(CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT),y)
 	rm -f $(INSTALLDIR)/www/scutclient_log.asp
 	rm -f $(INSTALLDIR)/www/scutclient_action.asp
 endif
+ifneq ($(CONFIG_FIRMWARE_INCLUDE_MENTOHUST),y)
+	rm -f $(INSTALLDIR)/www/mentohust.asp
+	rm -f $(INSTALLDIR)/www/mentohust_log.asp
+	rm -f $(INSTALLDIR)/www/mentohust_action.asp
+endif
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER),y)
 	rm -f $(INSTALLDIR)/www/dns-forwarder.asp
-endif
-ifneq ($(CONFIG_FIRMWARE_INCLUDE_CHINADNS),y)
-	rm -f $(INSTALLDIR)/www/Chinadns.asp
 endif
 ifneq ($(CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS),y)
 	rm -f $(INSTALLDIR)/www/Shadowsocks.asp

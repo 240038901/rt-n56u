@@ -231,13 +231,18 @@ write_smb_conf(void)
 	if (i_smb_mode == 1 || i_smb_mode == 3) {
 		char *rootnm = nvram_safe_get("http_username");
 		if (!(*rootnm)) rootnm = "admin";
-		
+#if defined (APP_SMBD36)
+		fprintf(fp, "map to guest = %s\n", "Bad Password");
+#else
 		fprintf(fp, "security = %s\n", "SHARE");
+#endif
 		fprintf(fp, "guest ok = %s\n", "yes");
 		fprintf(fp, "guest only = yes\n");
 		fprintf(fp, "guest account = %s\n", rootnm);
 	} else if (i_smb_mode == 4) {
+#if !defined (APP_SMBD36)
 		fprintf(fp, "security = %s\n", "USER");
+#endif
 		fprintf(fp, "guest ok = %s\n", "no");
 		fprintf(fp, "map to guest = Bad User\n");
 		fprintf(fp, "hide unreadable = yes\n");
@@ -245,7 +250,6 @@ write_smb_conf(void)
 		goto confpage;
 	}
 
-	fprintf(fp, "max protocol = SMB2\n");
 	fprintf(fp, "writeable = yes\n");
 	fprintf(fp, "directory mode = 0777\n");
 	fprintf(fp, "create mask = 0777\n");
@@ -265,6 +269,9 @@ write_smb_conf(void)
 	fprintf(fp, "dos filemode = yes\n");
 	fprintf(fp, "dos filetimes = yes\n");
 	fprintf(fp, "dos filetime resolution = yes\n");
+	fprintf(fp, "access based share enum = yes\n");
+	fprintf(fp, "veto files = /Thumbs.db/.DS_Store/._*/.apdisk/.TemporaryItems/");
+	fprintf(fp, "delete veto files = yes\n");
 	fprintf(fp, "\n");
 
 	disks_info = read_disk_data();
@@ -337,6 +344,8 @@ write_smb_conf(void)
 					int i, right, first;
 					char share[256];
 					
+					int guest_right = get_permission(SMB_GUEST_USER, follow_partition->mount_point, folder_list[n], "cifs");
+
 					memset(share, 0, 256);
 					strcpy(share, folder_list[n]);
 					
@@ -358,10 +367,16 @@ write_smb_conf(void)
 					fprintf(fp, "[%s]\n", share);
 					fprintf(fp, "comment = %s\n", folder_list[n]);
 					fprintf(fp, "path = %s/%s\n", follow_partition->mount_point, folder_list[n]);
-					fprintf(fp, "writeable = no\n");
+					fprintf(fp, /*(guest_right == 2) ? "writeable = yes\n" : */"writeable = no\n");
+					if (guest_right >= 1)
+						fprintf(fp, "guest ok = yes\n");
 					
 					fprintf(fp, "valid users = ");
 					first = 1;
+					if (guest_right >= 1) {
+						first = 0;
+						fprintf(fp, "%s", "nobody");
+					}
 					for (i = 0; i < acc_num; ++i) {
 						right = get_permission(account_list[i], follow_partition->mount_point, folder_list[n], "cifs");
 						if (first == 1)
@@ -391,6 +406,10 @@ write_smb_conf(void)
 					
 					fprintf(fp, "read list = ");
 					first = 1;
+					if (guest_right >= 1) {
+						first = 0;
+						fprintf(fp, "%s", "nobody");
+					}
 					for (i = 0; i < acc_num; ++i) {
 						right = get_permission(account_list[i], follow_partition->mount_point, folder_list[n], "cifs");
 						if (right < 1)
@@ -407,6 +426,10 @@ write_smb_conf(void)
 					
 					fprintf(fp, "write list = ");
 					first = 1;
+					if (guest_right >= 2) {
+						first = 0;
+						fprintf(fp, "%s", "nobody");
+					}
 					for (i = 0; i < acc_num; ++i) {
 						right = get_permission(account_list[i], follow_partition->mount_point, folder_list[n], "cifs");
 						if (right < 2)
@@ -452,7 +475,11 @@ clean_smbd_trash(void)
 	for (i=0; locks[i] && *locks[i]; i++)
 		doSystem("rm -f /var/locks/%s", locks[i]);
 
+#if defined (APP_SMBD36)
+	doSystem("rm -f %s", "/var/log.*");
+#else
 	doSystem("rm -f %s", "/var/*.log");
+#endif
 	doSystem("rm -f %s", "/var/log/*");
 }
 
@@ -475,16 +502,22 @@ config_smb_fastpath(int check_pid)
 void
 stop_samba(int force_stop)
 {
-	char* svcs[] = { "smbd", "nmbd", NULL };
+	char* svcs[] = { "smbd",
+#if defined (APP_SMBD36)
+	"wsdd2" ,
+#endif
+	 "nmbd", NULL };
+
+	const int nmbdidx = sizeof(svcs) / sizeof(svcs[0]) - 2;
 
 	if (!force_stop && nvram_match("wins_enable", "1"))
-		svcs[1] = NULL;
+		svcs[nmbdidx] = NULL;
 
 	kill_services(svcs, 5, 1);
 
 	fput_int("/proc/net/netfilter/nf_fp_smb", 0);
 
-	if (!svcs[1])
+	if (!svcs[nmbdidx])
 		return;
 
 	clean_smbd_trash();
@@ -533,6 +566,16 @@ void run_samba(void)
 	else
 		eval("/sbin/smbd", "-D", "-s", "/etc/smb.conf");
 
+#if defined (APP_SMBD36)
+	if (pids("wsdd2"))
+		doSystem("killall %s %s", "-SIGHUP", "wsdd2");
+	else
+		eval("/sbin/wsdd2", "-d", "-w");
+	
+	if (pids("wsdd2"))
+		logmessage("WSDD2", "daemon is started");
+#endif
+
 	if (pids("nmbd") && pids("smbd"))
 		logmessage("Samba Server", "daemon is started");
 }
@@ -559,6 +602,10 @@ write_nfsd_exports(void)
 	const char *exports_file = "/etc/exports";
 	const char *exports_rule = "async,insecure,no_root_squash,no_subtree_check";
 	char *nfsmm, *acl_addr, *acl_mask;
+#if defined (USE_IPV6)
+	int ipv6_type;
+	char *acl_addr6, *acl_len6;
+#endif
 
 	unlink(exports_file);
 
@@ -580,6 +627,14 @@ write_nfsd_exports(void)
 
 	acl_lan[0] = 0;
 	ip2class(acl_addr, acl_mask, acl_lan, sizeof(acl_lan));
+
+#if defined (USE_IPV6)
+	ipv6_type = get_ipv6_type();
+	if (ipv6_type != IPV6_DISABLED) {
+		acl_addr6 = nvram_safe_get("ip6_lan_addr");
+		acl_len6 = nvram_safe_get("ip6_lan_size");
+	}
+#endif
 
 	acl_vpn[0] = 0;
 	if (!get_ap_mode() && nvram_get_int("vpns_enable") && nvram_get_int("vpns_vuse")) {
@@ -616,6 +671,11 @@ write_nfsd_exports(void)
 				nfsmm = (strcmp(fsmode, "ro") == 0) ? "ro" : "rw";
 				fprintf(fp, "%s\t", mpname);
 				fprintf(fp, " %s(%s,%s)", acl_lan, nfsmm, exports_rule);
+#if defined (USE_IPV6)
+				if ((ipv6_type != IPV6_DISABLED) && (*acl_addr6) && (*acl_len6)) {
+					fprintf(fp, " %s/%s(%s,%s)", acl_addr6, acl_len6, nfsmm, exports_rule);
+				}
+#endif
 				if (acl_vpn[0])
 					fprintf(fp, " %s(%s,%s)", acl_vpn, nfsmm, exports_rule);
 				fprintf(fp, "\n");

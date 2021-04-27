@@ -1,17 +1,20 @@
-SRC_NAME=curl-7.61.0
-SRC_URL=https://github.com/curl/curl/releases/download/curl-7_61_0/curl-7.61.0.tar.gz
+SRC_NAME=curl-7.75.0
+SRC_URL=https://github.com/curl/curl/releases/download/curl-7_75_0/curl-7.75.0.tar.xz
+
+LDFLAGS += -Wl,-rpath-link=$(STAGEDIR)/lib
 
 all: download_test extract_test config_test
-	$(MAKE) -C $(SRC_NAME)
-	
+	$(MAKE) -j$(HOST_NCPU) -C $(SRC_NAME)
+
 download_test:
-	( if [ ! -f $(SRC_NAME).tar.gz ]; then \
-		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.gz $(SRC_URL); \
+	( if [ ! -f $(SRC_NAME).tar.xz ]; then \
+		wget -t5 --timeout=20 --no-check-certificate -O $(SRC_NAME).tar.xz $(SRC_URL); \
 	fi )
 
 extract_test:
 	( if [ ! -d $(SRC_NAME) ]; then \
-		tar zxf $(SRC_NAME).tar.gz; \
+		tar xf $(SRC_NAME).tar.xz; \
+		patch -d $(SRC_NAME) -p1 -i ../no_docs_test.patch; \
 	fi )
 
 config_test:
@@ -62,7 +65,7 @@ configure:
 
 clean:
 	if [ -f $(SRC_NAME)/Makefile ] ; then \
-		$(MAKE) -C $(SRC_NAME) distclean ; \
+		$(MAKE) -C $(SRC_NAME) clean ; \
 	fi ; \
 	rm -f config_done
 

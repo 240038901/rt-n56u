@@ -50,14 +50,24 @@ function initial(){
 		if (wid==7602||wid==7612){
 			showhide_div("row_vga_clamp", 1);
 			showhide_div("row_ldpc", 1);
+		} else if (wid==7615){
+			showhide_div("row_ldpc", 1);
 		}
 	}
 
+	if (support_2g_stream_tx()<4) 
+		document.form.rt_stream_tx.remove(3);
+	if (support_2g_stream_tx()<3) 
+		document.form.rt_stream_tx.remove(2);
 	if (support_2g_stream_tx()<2) {
 		document.form.rt_stream_tx.remove(1);
 		showhide_div("row_greenap", 0);
 	}
 
+	if (support_2g_stream_rx()<4)
+		document.form.rt_stream_rx.remove(3);
+	if (support_2g_stream_rx()<3)
+		document.form.rt_stream_rx.remove(2);
 	if (support_2g_stream_rx()<2)
 		document.form.rt_stream_rx.remove(1);
 
@@ -174,6 +184,8 @@ function done_validating(action){
                                                 <select name="rt_stream_tx" class="input">
                                                     <option value="1" <% nvram_match_x("", "rt_stream_tx", "1", "selected"); %>>1T (150Mbps)</option>
                                                     <option value="2" <% nvram_match_x("", "rt_stream_tx", "2", "selected"); %>>2T (300Mbps)</option>
+                                                    <option value="3" <% nvram_match_x("", "rt_stream_tx", "3", "selected"); %>>3T (450Mbps)</option>
+                                                    <option value="4" <% nvram_match_x("", "rt_stream_tx", "4", "selected"); %>>4T (600Mbps)</option>
                                                 </select>
                                             </td>
                                         </tr>
@@ -183,6 +195,8 @@ function done_validating(action){
                                                 <select name="rt_stream_rx" class="input">
                                                     <option value="1" <% nvram_match_x("", "rt_stream_rx", "1", "selected"); %>>1R (150Mbps)</option>
                                                     <option value="2" <% nvram_match_x("", "rt_stream_rx", "2", "selected"); %>>2R (300Mbps)</option>
+                                                    <option value="3" <% nvram_match_x("", "rt_stream_rx", "3", "selected"); %>>3R (450Mbps)</option>
+                                                    <option value="4" <% nvram_match_x("", "rt_stream_rx", "4", "selected"); %>>4R (600Mbps)</option>
                                                 </select>
                                             </td>
                                         </tr>
@@ -321,6 +335,15 @@ function done_validating(action){
                                                 <select name="rt_HT_AutoBA" class="input">
                                                     <option value="0" <% nvram_match_x("","rt_HT_AutoBA", "0","selected"); %>><#btn_Disable#></option>
                                                     <option value="1" <% nvram_match_x("","rt_HT_AutoBA", "1","selected"); %>><#btn_Enable#> (*)</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th><#WLANConfig11n_amsdu#></th>
+                                            <td>
+                                                <select name="rt_HT_AMSDU" class="input">
+                                                    <option value="0" <% nvram_match_x("", "rt_HT_AMSDU", "0", "selected"); %>><#btn_Disable#> (*)</option>
+                                                    <option value="1" <% nvram_match_x("", "rt_HT_AMSDU", "1", "selected"); %>><#btn_Enable#></option>
                                                 </select>
                                             </td>
                                         </tr>
